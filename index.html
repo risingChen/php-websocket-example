@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<html>
+    <head>
+        <title>TODO supply a title</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body>
+        <div id='incomingMsgOutput'></div>
+        <input type="text" id='message' value=''/>
+        <button id='send' onclick="onSendClick()">发送</button>
+        <button id='open' onclick="createConnect()">开启连接</button>
+        <button id='close' onclick="onDisconnectClick()">关闭连接</button>
+    </body>
+    <script>
+    	//online
+    	//var webSocketURL = "ws://api.admama.com/socket.io/";
+    	//develop
+    	var webSocketURL = "ws://127.0.0.1:9191";
+    	var webSocket = null
+    	function createConnect(){
+	        openWSConnection();
+    	}
+    	
+    	window.onload = function(){
+    		if(webSocket != null){
+    			webSocket.close();
+    		}
+
+    	};
+
+    	function onDisconnectClick() {
+    		var token = document.getElementById("message").value;
+    		if(token != ''){
+    			var msg = '{"token":"'+token+'","command":"close"}';
+		    	webSocket.send(msg);
+		    	webSocket.close();
+    		}
+		}
+
+    	function onSendClick() {
+		    if (webSocket.readyState != WebSocket.OPEN) {
+		        console.error("webSocket is not open: " + webSocket.readyState);
+		        return;
+		    }
+		    var token = document.getElementById("message").value;
+		    if(token != ''){
+		    	var msg = '{"token":"'+token+'","command":"operation"}';
+		    	webSocket.send(msg);
+		    }
+		}
+
+    	function openWSConnection() {
+		    console.log("openWSConnection::Connecting to: " + webSocketURL);
+		    try {
+		        webSocket = new WebSocket(webSocketURL);
+		        webSocket.onopen = function(openEvent) {
+		            console.log("WebSocket OPEN: " + JSON.stringify(openEvent, null, 4));
+		            //document.getElementById("btnSend").disabled  = false;
+		            document.getElementById("open").disabled = true;
+		            document.getElementById("close").disabled = false;
+		        };
+		        webSocket.onclose = function (closeEvent) {
+		            console.log("WebSocket CLOSE: " + JSON.stringify(closeEvent, null, 4));
+		            //document.getElementById("btnSend").disabled       = true;
+		            document.getElementById("open").disabled    = false;
+		            document.getElementById("close").disabled = true;
+		        };
+		        webSocket.onerror = function (errorEvent) {
+		            console.log("WebSocket ERROR: " + JSON.stringify(errorEvent, null, 4));
+		        };
+		        webSocket.onmessage = function (messageEvent) {
+		            var wsMsg = messageEvent.data;
+		            console.log("WebSocket MESSAGE: " + wsMsg);
+		            if (wsMsg.indexOf("error") > 0) {
+		                document.getElementById("incomingMsgOutput").innerHTML += "error: " + wsMsg.error + "<br>";
+		            } else {
+		                document.getElementById("incomingMsgOutput").innerHTML += "message: " + wsMsg + "<br>";
+		            }
+		        };
+		        var int=self.setInterval("onSendClick()",1000);
+		    } catch (exception) {
+		        console.error(exception);
+		    }
+		}
+		
+    </script>
+</html>

@@ -1,0 +1,1 @@
+just run php -q socket.php and enjoy you websocket 
